@@ -44,9 +44,21 @@ const words = [
 export default function RevealExample() {
   const container = useRef<HTMLElement | null>(null);
   const textSection = useRef<HTMLElement | null>(null);
+  const cursorRef = useRef<HTMLDivElement | null>(null);
 
   useGSAP(
     () => {
+      const moveCursor = (e: MouseEvent) => {
+        gsap.to(cursorRef.current, {
+          x: e.clientX,
+          y: e.clientY,
+          duration: 0.18,
+          ease: "power2.out",
+        });
+      };
+
+      window.addEventListener("mousemove", moveCursor);
+
       const wordElements = gsap.utils.toArray<HTMLElement>(".moving-word");
 
       gsap.set(wordElements, {
@@ -129,63 +141,85 @@ export default function RevealExample() {
       });
 
       ScrollTrigger.refresh();
+
+      return () => {
+        window.removeEventListener("mousemove", moveCursor);
+      };
     },
     { scope: container },
   );
 
   return (
-    <main ref={container} className="min-h-screen overflow-x-hidden bg-black text-white">
-      <section className="flex min-h-screen items-center justify-center bg-black px-6 text-center">
-        <div>
-          <p className="mb-5 text-sm font-bold uppercase tracking-[0.28em] text-white/35">
-            GSAP Scroll Text
+    <>
+      <div
+        ref={cursorRef}
+        className="pointer-events-none fixed left-0 top-0 z-[10000] h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/80 bg-cyan-200/15 shadow-[0_0_28px_rgba(103,232,249,0.65)] mix-blend-difference"
+      />
+      <main
+        ref={container}
+        className="min-h-screen overflow-x-hidden bg-black text-white"
+      >
+        <section className="flex min-h-screen items-center justify-center bg-black px-6 text-center">
+          <div>
+            <p className="mb-5 text-sm font-bold uppercase tracking-[0.28em] text-white/35">
+              GSAP Scroll Text
+            </p>
+            <h1 className="max-w-5xl text-[clamp(48px,9vw,136px)] font-semibold leading-[0.9] tracking-[-0.04em]">
+              Scroll to move the words
+            </h1>
+          </div>
+        </section>
+
+        <section
+          ref={textSection}
+          className="relative h-screen overflow-hidden bg-black"
+        >
+          <div className="pointer-events-none absolute inset-0">
+            {starPositions.map(([left, top], index) => (
+              <span
+                key={`${left}-${top}`}
+                className="star-dot absolute h-1 w-1 rounded-full bg-white/65 shadow-[0_0_14px_rgba(255,255,255,0.55)]"
+                style={{
+                  left,
+                  top,
+                  opacity: index % 3 === 0 ? 0.35 : 0.7,
+                  transform: `scale(${index % 4 === 0 ? 0.65 : 1})`,
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="relative z-10 flex h-full flex-col justify-center px-[8vw]">
+            <div className="moving-line whitespace-nowrap text-[clamp(64px,11vw,172px)] font-semibold leading-[0.88] tracking-[-0.06em] text-[#4a4a50]">
+              {words.slice(0, 4).map((word) => (
+                <span
+                  key={word}
+                  className="moving-word mr-[0.18em] inline-block"
+                >
+                  {word}
+                </span>
+              ))}
+            </div>
+
+            <div className="moving-line mt-8 whitespace-nowrap text-[clamp(64px,11vw,172px)] font-semibold leading-[0.88] tracking-[-0.06em] text-[#4a4a50]">
+              {words.slice(4).map((word) => (
+                <span
+                  key={word}
+                  className="moving-word mr-[0.18em] inline-block"
+                >
+                  {word}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="flex min-h-screen items-center justify-center bg-black px-6 text-center">
+          <p className="max-w-3xl text-[clamp(32px,6vw,84px)] font-semibold leading-none tracking-[-0.05em] text-white/80">
+            Words can become the animation.
           </p>
-          <h1 className="max-w-5xl text-[clamp(48px,9vw,136px)] font-semibold leading-[0.9] tracking-[-0.04em]">
-            Scroll to move the words
-          </h1>
-        </div>
-      </section>
-
-      <section ref={textSection} className="relative h-screen overflow-hidden bg-black">
-        <div className="pointer-events-none absolute inset-0">
-          {starPositions.map(([left, top], index) => (
-            <span
-              key={`${left}-${top}`}
-              className="star-dot absolute h-1 w-1 rounded-full bg-white/65 shadow-[0_0_14px_rgba(255,255,255,0.55)]"
-              style={{
-                left,
-                top,
-                opacity: index % 3 === 0 ? 0.35 : 0.7,
-                transform: `scale(${index % 4 === 0 ? 0.65 : 1})`,
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 flex h-full flex-col justify-center px-[8vw]">
-          <div className="moving-line whitespace-nowrap text-[clamp(64px,11vw,172px)] font-semibold leading-[0.88] tracking-[-0.06em] text-[#4a4a50]">
-            {words.slice(0, 4).map((word) => (
-              <span key={word} className="moving-word mr-[0.18em] inline-block">
-                {word}
-              </span>
-            ))}
-          </div>
-
-          <div className="moving-line mt-8 whitespace-nowrap text-[clamp(64px,11vw,172px)] font-semibold leading-[0.88] tracking-[-0.06em] text-[#4a4a50]">
-            {words.slice(4).map((word) => (
-              <span key={word} className="moving-word mr-[0.18em] inline-block">
-                {word}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="flex min-h-screen items-center justify-center bg-black px-6 text-center">
-        <p className="max-w-3xl text-[clamp(32px,6vw,84px)] font-semibold leading-none tracking-[-0.05em] text-white/80">
-          Words can become the animation.
-        </p>
-      </section>
-    </main>
+        </section>
+      </main>
+    </>
   );
 }
